@@ -8,17 +8,6 @@
 }
 * { margin: 0; padding: 0;} body { display: flex;justify-content: center; align-items: center; 
 }
-.container{
-      justify-content: center;
-      align-items: center;
-      margin:0;width: 200px;
-      height:200px;
-    
+.container {  display: flex;}.container > div {  flex: 1; /*grow*/}
 
-      display: grid; 
-      grid-template-rows: repeat(3, 100px);
-      grid-template-columns: repeat(14, 100px);
-      
-      
-}
 .container button {display: flex; margin: 10px; }

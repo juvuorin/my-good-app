@@ -1,23 +1,83 @@
-import React, { useState } from 'react';
-import logo from './logo.svg';
+import React, { useState, useEffect /*useReducer*/ } from 'react';
+//import logo from './logo.svg';
+import axios from 'axios';
 import './App.css';
-import Numbers from './Numbers.js';
-import Display from './Display.js'
 
-//Container keeps track of the state of an application
+var db = openDatabase("my.db", '1.0', "My WebSQL Database", 2 * 1024 * 1024);
+
 function App() {
 
-  const [numbers, setNumbers] = useState(["1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
-    "+", "-", "*", "/", "="])
-  const [display, setDisplay] = useState("");
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [names, setNames] = useState([])
 
-  const buttonClicked = (value) => {
-    if (value == "=") setDisplay(eval(display)); else {
-      let newValue = display + value
-      setDisplay(newValue)
-    }
+  const create = () => {
+    db.transaction((tx) => {
+
+      
+      tx.executeSql("CREATE TABLE IF NOT EXISTS people (id integer primary key, firstname text, lastname text)");
+    });
   }
 
-  return <div><Display displayText={display}></Display><Numbers values={numbers} buttonClicked={buttonClicked}></Numbers></div>
+  useEffect(()=>{
+    create();
+    select();
+  },[])
+
+  const select = () => {
+    db.transaction((tx) => {
+      tx.executeSql("SELECT firstname, lastname FROM people", [], function (tx, results) {
+        if (results.rows.length > 0) {
+          setNames(createMappableArrayFromSqlResultList(results.rows));
+        } else { setNames([]) }
+      });
+    });
+  }
+
+
+  const insert = (firstname, lastname) => {
+
+    db.transaction((tx) => {
+      tx.executeSql("INSERT INTO people (firstname, lastname) VALUES (?,?)", [firstname, lastname], function (tx, results) {
+        if (results.insertId!=null) {
+          setNames(names.concat([{firstname:firstName, lastname:lastname}]))
+        } else {console.log("added Not ok") }
+      });
+    });
+
+    
+  }
+
+  const add = () => {
+
+    insert(firstName, lastName)
+    
+  }
+
+  const onLastNameChanged = (event)=> {
+    setLastName(event.target.value)
+    
+  }
+  const onFirstNameChanged = (event)=> {
+    setFirstName(event.target.value)
+  }
+
+  const createMappableArrayFromSqlResultList = (resultList)=> {
+    let resultArray=[]
+    for (let n=0;n<resultList.length;n++) {
+      resultArray.push(resultList.item(n))
+    }
+    return resultArray;
+  } 
+
+  return (
+    <div>
+
+      firstname:<input value={firstName} onChange={(e)=>onFirstNameChanged(e)} type="text"></input>
+      lastname:<input value={lastName} onChange={(e)=>onLastNameChanged(e)} type="text"></input>
+      <button onClick={add}>Add to database</button>
+      {names.map(item=><div>{item.firstname} {item.lastname}</div>)}
+    </div>
+  );
 }
 export default App;
