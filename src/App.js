@@ -12,11 +12,14 @@ function App() {
   const [names, setNames] = useState([])
 
   const create = () => {
-    db.transaction((tx) => {
-
-      
-      tx.executeSql("CREATE TABLE IF NOT EXISTS people (id integer primary key, firstname text, lastname text)");
+     db.transaction((tx) => {   
+      tx.executeSql("CREATE TABLE IF NOT EXISTS customer_ (identity integer primary key, firstname text, lastname text)");
     });
+    db.transaction((tx) => {   
+      tx.executeSql("CREATE TABLE IF NOT EXISTS order_ (identity integer primary key,customer_id integer, product_name text,FOREIGN KEY(customer_id) REFERENCES customer(identity))");
+
+    }); 
+
   }
 
   useEffect(()=>{
@@ -26,8 +29,10 @@ function App() {
 
   const select = () => {
     db.transaction((tx) => {
-      tx.executeSql("SELECT firstname, lastname FROM people", [], function (tx, results) {
+      tx.executeSql("SELECT firstname, lastname FROM customer", [], function (tx, results) {
         if (results.rows.length > 0) {
+      //    setNames(results.rows);
+       
           setNames(createMappableArrayFromSqlResultList(results.rows));
         } else { setNames([]) }
       });
@@ -38,14 +43,12 @@ function App() {
   const insert = (firstname, lastname) => {
 
     db.transaction((tx) => {
-      tx.executeSql("INSERT INTO people (firstname, lastname) VALUES (?,?)", [firstname, lastname], function (tx, results) {
+      tx.executeSql("INSERT INTO customer (firstname, lastname) VALUES (?,?)", [firstname, lastname], function (tx, results) {
         if (results.insertId!=null) {
           setNames(names.concat([{firstname:firstName, lastname:lastname}]))
         } else {console.log("added Not ok") }
       });
     });
-
-    
   }
 
   const add = () => {
